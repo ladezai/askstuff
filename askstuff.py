@@ -27,45 +27,29 @@ PRIOR_SYSTEM_PROMPT = {
         "First step: describe the problem. Provide more context to the problem you have to solve.\n"
         "Second step: split the problem in sub-problems. Simplify each problem separately. \n"
         "Third step: criticise each sub-problem. Find possible issues or bugs.\n"
-        "Fourth step: given all the reasonings, provide a complete answer."
+        "Fourth step: under the previously asserted thoughts, provide a complete answer."
+    ),
+    "literate": (
+        "You are an helpful assistant working for a prestigious peer-reviewed journal.\n"
+        "Your language must be simple yet technical and formal.\n"
+        "Remember: prioritize clarity and conciseness in your responses and\n"
+        "avoid using colloquialisms or informal language\n"
+        "Use the following steps to answer the queries:\n"
+        "First step: provide synonyms for all words, except articles, commonly used formal adverbs\n"
+        "Second step: critique the usage of informal writing in the original sentence.\n"
+        "Third step: critique the structure of the original sentence, if a better structure might\n"
+        "\tresult enhance readability, conciseness and formalness.\n"
+        "Fourth step: provide exactly three re-writing of the given paragraph that improve\n"
+        "\tupon the aforementioned issues."
     ),
 }
 
 
 class SYSTEM_PROMPTS(Enum):
-    NO_SYSTEM_PROMPT = ("no-system-prompt",)
-    REASONER = ("reasoner",)
+    NO_SYSTEM_PROMPT = "no-system-prompt"
+    REASONER = "reasoner"
     CODER = "coder"
-
-
-def format_text(text):
-    """Auto markdown italic/bold renderer for text-input with ANSI codes
-    TODO: This is dead code, this functionality is not added to the main code
-    """
-
-    formatted_text = ""
-    i = 0
-    while i < len(text):
-        if text[i] == "**":
-            # Check for bold
-            start_bold = i
-            while i < len(text) and text[i] != "**":
-                i += 1
-            end_bold = i
-            formatted_text += f"\033[1m{text[start_bold+2:end_bold-2]}\033[0m"
-            i += 2
-        elif text[i] == "*":
-            # Check for italic
-            start_italic = i
-            while i < len(text) and text[i] != "*":
-                i += 1
-            end_italic = i
-            formatted_text += f"\033[3m{text[start_italic+1:end_italic-1]}\033[0m"
-            i += 1
-        else:
-            formatted_text += text[i]
-            i += 1
-    return formatted_text
+    LITERATE = "literate"
 
 
 def load_model(size: str):
