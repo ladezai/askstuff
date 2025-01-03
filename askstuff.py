@@ -11,6 +11,7 @@ RICH_TEXT = False
 CMD_LINE_LENGTH = 90
 PLAIN_TEXT_PROMPT = f"\nThe output provided must be in plain-text format, easy to read in a terminal with monospace character with line size {CMD_LINE_LENGTH}."
 DEVICE = "mps" if torch.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
+QUIT_RESERVED_KEYWORDS = ['!end', '!quit', '!exit']
 
 # Default system prompts
 PRIOR_SYSTEM_PROMPT = {
@@ -32,15 +33,13 @@ PRIOR_SYSTEM_PROMPT = {
     "literate": (
         "You are an helpful assistant working for a prestigious peer-reviewed journal.\n"
         "Your language must be simple yet technical and formal.\n"
-        "Remember: prioritize clarity and conciseness in your responses and\n"
-        "avoid using colloquialisms or informal language\n"
-        "Use the following steps to answer the queries:\n"
-        "First step: provide synonyms for all words, except articles, commonly used formal adverbs\n"
-        "Second step: critique the usage of informal writing in the original sentence.\n"
-        "Third step: critique the structure of the original sentence, if a better structure might\n"
+        "You'll receive a sentence and use the steps answer the query:\n"
+        "First step: critique the usage of informal writing in the original sentence.\n"
+        "Second step: critique the structure of the original sentence, if a better structure might\n"
         "\tresult enhance readability, conciseness and formalness.\n"
-        "Fourth step: provide exactly three re-writing of the given paragraph that improve\n"
-        "\tupon the aforementioned issues."
+        "Third step: provide exactly three re-writing of the given paragraph that improve\n"
+        "\tupon the aforementioned issues.\n\n"
+        "Paragraph to improve: "
     ),
 }
 
@@ -67,7 +66,12 @@ def load_model(size: str):
 def stream_answer(question, model, tokenizer):
     streamer = TextStreamer(tokenizer, skip_prompt=True)
     _ = model.generate(
-        **question, streamer=streamer, pad_token_id=tokenizer.pad_token_id, max_length=4096, temperature=0.1, top_k=45
+        **question, 
+        streamer=streamer, 
+        pad_token_id=tokenizer.pad_token_id,
+        max_length=4096, 
+        temperature=0.15, 
+        top_k=50
     )
     return streamer
 
@@ -84,7 +88,7 @@ def generate_question(msg: str, system_prompt: str, tokenizer):
     return question
 
 
-def answer_question(question: str, system_prompt: Optional[str] = str):
+def answer_question(question: str, system_prompt: Optional[str] = None):
     if system_prompt is None:
         system_prompt = input("Provide a system prompt (No answer does not use a system prompt): ")
         if system_prompt.lower().strip() in PRIOR_SYSTEM_PROMPT:
@@ -100,11 +104,16 @@ def answer_question(question: str, system_prompt: Optional[str] = str):
 
 
 def interactive(system_prompt: Optional[str] = None):
-    while 1:
+    keep_running = True
+    while keep_running:
         question = input("> ")
-        if question.startswith("!end") or question.startswith("!stop") or question.startswith("!exit"):
-            break
-        answer_question(question, system_prompt)
+
+        for exit_keyword in QUIT_RESERVED_KEYWORDS:
+            if question.startswith(exit_keyword):
+                keep_running = False
+
+        if keep_running:
+            answer_question(question, system_prompt)
 
 
 if __name__ == "__main__":
@@ -126,6 +135,7 @@ if __name__ == "__main__":
         print("#" * CMD_LINE_LENGTH)
         print("INTERACTIVE LLM QWEN2.5-CODER-INSTRUCT".lower().center(CMD_LINE_LENGTH))
         print("#" * CMD_LINE_LENGTH)
+        print(f"To exit write any of the following {QUIT_RESERVED_KEYWORDS}.")
         interactive(system_prompt)
     else:
         answer_question(question=args.question, system_prompt=system_prompt)
