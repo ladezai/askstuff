@@ -29,18 +29,7 @@ PRIOR_SYSTEM_PROMPT = {
         "Second step: split the problem in sub-problems. Simplify each problem separately. \n"
         "Third step: criticise each sub-problem. Find possible issues or bugs.\n"
         "Fourth step: under the previously asserted thoughts, provide a complete answer."
-    ),
-    "literate": (
-        "You are an helpful assistant working for a prestigious peer-reviewed journal.\n"
-        "Your language must be simple yet technical and formal.\n"
-        "You'll receive a sentence and use the steps answer the query:\n"
-        "First step: critique the usage of informal writing in the original sentence.\n"
-        "Second step: critique the structure of the original sentence, if a better structure might\n"
-        "\tresult enhance readability, conciseness and formalness.\n"
-        "Third step: provide exactly three re-writing of the given paragraph that improve\n"
-        "\tupon the aforementioned issues.\n\n"
-        "Paragraph to improve: "
-    ),
+    )
 }
 
 
@@ -96,9 +85,9 @@ def answer_question(question: str, system_prompt: Optional[str] = None):
 
         if not RICH_TEXT:
             system_prompt = system_prompt + PLAIN_TEXT_PROMPT
-        print("The system prompt is: ")
-        print(system_prompt)
 
+    print("QUESTION", question)
+    print("SYSTEM_PROMPT:", system_prompt)
     question = generate_question(question, system_prompt, tokenizer)
     _ = stream_answer(question, model, tokenizer)
 
